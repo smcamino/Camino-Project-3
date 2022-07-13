@@ -14,9 +14,9 @@ In this repo you will find code for this project in the app.R file. This code cr
 
 ## Code to install packages:
 
-install.packages(c("shiny", "shinydashboard", "fontawesome"))
+`install.packages(c("shiny", "shinydashboard", "fontawesome"))`
 
 ## Code to create app:
   
-shiny::runGitHub("Camino-Project-3", "smcamino")
+`shiny::runGitHub("Camino-Project-3", "smcamino")`
 
