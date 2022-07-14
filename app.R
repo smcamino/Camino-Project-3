@@ -5,17 +5,18 @@ library(fontawesome)
 ui <- dashboardPage(skin="red",
                     
                     # Adds a title
-                    dashboardHeader(title="Wildfire Data Exploration and Analysis",titleWidth=1000),
+                    dashboardHeader(title="Wildfire Data Exploration and Analysis", titleWidth=1000),
                     
                     # Defines sidebar items
-                    dashboardSidebar(sidebarMenu(
-                      menuItem("About", tabName = "about", icon = icon("fire", lib = "font-awesome")),
-                      menuItem("Data Exploration", tabName = "explore", icon = icon("chart-bar", lib = "font-awesome")),
-                      menuItem("Modeling", tabName = "modeling", icon = icon("chart-line", lib = "font-awesome"),
-                        menuSubItem("Modeling Info", tabName = "info", icon = icon("info", lib = "font-awesome")),
-                        menuSubItem("Modeling Fitting", tabName = "fit", icon = icon("tree", lib = "font-awesome")),
-                        menuSubItem("Prediction", tabName = "prediction", icon = icon("mountain", lib = "font-awesome"))),
-                      menuItem("Data", tabName = "data", icon = icon("fire-extinguisher", lib = "font-awesome"))
+                    dashboardSidebar(
+                      sidebarMenu(
+                        menuItem("About", tabName = "about", icon = icon("fire", lib = "font-awesome")),
+                        menuItem("Data Exploration", tabName = "explore", icon = icon("chart-bar", lib = "font-awesome")),
+                        menuItem("Modeling", tabName = "modeling", icon = icon("chart-line", lib = "font-awesome"),
+                          menuSubItem("Modeling Info", tabName = "info", icon = icon("info", lib = "font-awesome")),
+                          menuSubItem("Modeling Fitting", tabName = "fit", icon = icon("tree", lib = "font-awesome")),
+                          menuSubItem("Prediction", tabName = "prediction", icon = icon("mountain", lib = "font-awesome"))),
+                        menuItem("Data", tabName = "data", icon = icon("fire-extinguisher", lib = "font-awesome"))
                     )),
                     
                     # Defines the body of the app
@@ -34,11 +35,8 @@ ui <- dashboardPage(skin="red",
                                          h1("What is the purpose of this app?"),
                                          # Box to contain description
                                          box(background="red",width=12,
-                                             h4("This application shows the relationship between the prior distribution and the posterior distribution for a simple Bayesian model."),
-                                             h4("The prior distribution is assumed to be a Beta distribution and the likelihood is a Binomial distribution with 30 trials (of which you can change the number of successes).  This yields a Beta distribution as the posterior. Note: As the prior distribution is in the same family as the posterior, we say the prior is conjugate for the likelihood."),
-                                             h4("This application corresponds to an example in ",span("Mathematical Statistics and Data Analysis",style = "font-style:italic"), "section 3.5, example E, by John Rice."),
-                                             h4("The goal of the example is to update our belief about the parameter \\(\\Theta\\) = the probability of obtaining a head when a particular coin is flipped.  The experiment is to flip the coin 30 times and observe the number of heads. The likelihood is then a binomial distribution. The prior is assumed to be a Beta distribution.")
-                                         )
+                                             p("The Purpose of this app is to explore Wildfire data and model it!")
+                                             )
                                   ),
                                   
                                   column(6,
@@ -46,11 +44,8 @@ ui <- dashboardPage(skin="red",
                                          h1("What data is being used?"),
                                          # Box to contain description
                                          box(background="red",width=12,
-                                             h4("The controls for the app are located to the left and the visualizations are available on the right."),
-                                             h4("To change the number of successes observed (for example the number of coins landing head side up), the slider on the top left can be used."),
-                                             h4("To change the prior distribution, the hyperparameters can be set using the input boxes on the left.  The changes in this distribution can be seen on the first graph."),
-                                             h4("The resulting changes to the posterior distribution can be seen on the second graph.")
-                                         )
+                                             p("The data was collected from the Klamath network parks which include Crater Lake National Park, Lassen Volcanic National Park, Lava Beds National Monument, and Whiskeytown National Recreation Area. The measurements were taken before, pre-burn, post-burn, and after the fire occurred in these areas. The data was proveded by a Regional Fire Ecologist for the National Park Service, Interior Regions 8, 9, 10, and 12 and exported by the U.S. Geological Survey.")
+                                             )
                                   ),
                                   
                                   column(6,
@@ -58,12 +53,9 @@ ui <- dashboardPage(skin="red",
                                          h1("What does this app contain?"),
                                          # Box to contain description
                                          box(background="red",width=12,
-                                             h4("The controls for the app are located to the left and the visualizations are available on the right."),
-                                             h4("To change the number of successes observed (for example the number of coins landing head side up), the slider on the top left can be used."),
-                                             h4("To change the prior distribution, the hyperparameters can be set using the input boxes on the left.  The changes in this distribution can be seen on the first graph."),
-                                             h4("The resulting changes to the posterior distribution can be seen on the second graph.")
-                                         )
-                                   ),
+                                             p("This app contains")
+                                             )
+                                   )
                                   
                                   #imageOutput("NationalParkService.gif")
                                 )
@@ -73,7 +65,19 @@ ui <- dashboardPage(skin="red",
                         tabItem(tabName = "explore",
                                 fluidRow(
                                   column(width=3,
-                                         box(width=12,background="red",sliderInput("yvalue","Y=Number of Successes",min = 0,max = 30,value = 15)
+                                         box(width=12,
+                                             background="red",
+                                             radioButtons(inputId = "variable",
+                                                          label = "Choose a variable:",
+                                                          choices = c("Number of Trees" = 1,
+                                                                      "Basal Area" = 2,
+                                                                      "Stem Carbon" = 3),
+                                                          selected = 1),
+                                             
+                                             selectInput(inputId = "plot",
+                                                         label = "Plot Type:",
+                                                         choices = list("Histogram", "Density Plot", "Scatterplot"),
+                                                         selected = "Histogram"))
                                          ),
                                          box(width=12,
                                              title="Hyperparameters of the prior distribution for \\(\\Theta\\)",
@@ -99,8 +103,8 @@ ui <- dashboardPage(skin="red",
                                            )
                                          )
                                   )
-                                )
-                        ),
+                                ),
+                      
                         
                         tabItem(tabName = "info",
                                 fluidRow(
@@ -210,7 +214,16 @@ ui <- dashboardPage(skin="red",
 )
 
 # Define server logic required to draw the plots
-server <- shinyServer(function(input, output) {
+server <- shinyServer(function(input, output, session) {
+  
+  # THIS DOESN'T WORK
+  observe(
+    if(input$variable == 3){
+      updateSelectInput(session, inputID = "plot", choices = list("Histogram", "Density Plot"))
+    } else {
+      updateSelectInput(session, inputId = "plot", choices = list("Histogram", "Density Plot", "Scatterplot"))
+    }
+  )
   
   #Create prior plot output
   output$priorPlot<-renderPlot({
