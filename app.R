@@ -5,8 +5,9 @@ library(readxl)
 library(lubridate)
 library(knitr)
 library(tidyverse)
+library(caret)
 
-fire <- read_xlsx("tree_summary_dt.xlsx") %>% mutate(date2 = ymd(date)) %>% select(-c(date, stem_biomass_ha))
+fire <- read_xlsx("tree_summary_dt.xlsx") %>% mutate(date2 = ymd(date), month = month(date2), day = day(date2)) %>% select(-c(date, date2, stem_biomass_ha, time_since_burn))
 
 ui <- dashboardPage(skin="red",
                     
@@ -103,21 +104,31 @@ ui <- dashboardPage(skin="red",
                                                          label = "Plot Type:",
                                                          choices = list("Histogram" = "hist", "Density Plot" = "density"),#, "Scatterplot" = "scatter"),
                                                          selected = "hist")),
-                                         
                                          box(width=12,
                                              background="red",
-                                              checkboxGroupInput(inputId = "summary",
-                                                                 label = "Choose what you want included in the summary table:",
-                                                                 choices = c("Minimum" = "min",
-                                                                                "Mean" = "mean",
-                                                                                "Median" = "med",
-                                                                                "Maximum" = "max",
-                                                                                "Variance" = "var"),
-                                                                 selected = c("Minimum" = "min",
-                                                                                 "Mean" = "mean",
-                                                                                 "Median" = "med",
-                                                                                 "Maximum" = "max",
-                                                                                 "Variance" = "var")))
+                                             selectInput(inputId = "summaryType",
+                                                         label = "Summary Type:",
+                                                         choices = list("Numeric Summary for Variable" = "sumVar", "Contingency Table for Park and Year" = "conTable"),
+                                                         selected = "sumVar")),
+                                         
+                                         conditionalPanel(condition = "input.summaryType == 'sumVar'",
+                                                       box(width=12,
+                                                       background="red",
+                                                      checkboxGroupInput(inputId = "summary",
+                                                                         label = "Choose what you want included in the summary table:",
+                                                                         choices = c("Minimum" = "Minimum",
+                                                                                     "Mean" = "Mean",
+                                                                                     "Median" = "Median",
+                                                                                     "Maximum" = "Maximum",
+                                                                                      "Variance" = "Variance"),
+                                                                         selected = c("Minimum" = "Minimum",
+                                                                                      "Mean" = "Mean",
+                                                                                      "Median" = "Median",
+                                                                                      "Maximum" = "Maximum",
+                                                                                      "Variance" = "Variance")))   
+                                           
+                                                          )
+                                         
                                          ),
                                   
                                   column(width=9,
@@ -195,17 +206,37 @@ ui <- dashboardPage(skin="red",
                                                           step = 0.1)
                                          ),
                                          box(width=12,
+                                             background = "red",
+                                             checkboxGroupInput(inputId = "varSelect",
+                                                                label = "Choose variables you want included in the model:",
+                                                                choices = c("Park" = "park",
+                                                                            "Plot ID" = "plot_id",
+                                                                            "Day" = "day",
+                                                                            "Month" = "month",
+                                                                            "Year" = "year",
+                                                                            "Number of Trees" = "n_trees_ha",
+                                                                            "Basal Area" = "basal_area_ha"),
+                                                                selected = c("Park" = "park",
+                                                                             "Plot ID" = "plot_id",
+                                                                             "Day" = "day",
+                                                                             "Month" = "month",
+                                                                             "Year" = "year",
+                                                                             "Time Since the Burn" = "time_since_burn",
+                                                                             "Number of Trees" = "n_trees_ha",
+                                                                             "Basal Area" = "basal_area_ha"))
+                                         )
                                              )
                                   ),
                                   column(width=9,
                                          fluidRow(
                                            box(width=6,
+                                               
                                                ),
                                            box(width=6,
                                                )
                                          )
                                   )
-                                )
+                                
                         ),
                         
                         tabItem(tabName = "prediction",
@@ -214,14 +245,16 @@ ui <- dashboardPage(skin="red",
                                          box(width=12,
                                              background="red",
                                              # CHOSE MODEL HERE WITH RADIOBUTTONS
-                                             numericInput(inputId = "prop",
-                                                          label = "Choose a Proportion:",
-                                                          value = 0.8,
-                                                          min = 0,
-                                                          max = 1,
-                                                          step = 0.1)
+                                             radioButtons(inputId = "model",
+                                                          label = "Choose Model Type:",
+                                                          choices = c("Multiple Linear Regression Model" = 1,
+                                                                      "Regression Tree Model" = 2,
+                                                                      "Random Forest Model" = 3),
+                                                          selected = 1))
                                          ),
                                          box(width=12,
+                                             background = "red",
+                                            #tableOutput("tableRMSE") 
                                          )
                                   ),
                                   column(width=9,
@@ -233,7 +266,7 @@ ui <- dashboardPage(skin="red",
                                          )
                                   )
                                 )
-                        )
+                        
                         # 
                         # tabItem(tabName = "data",
                         #         fluidRow(
@@ -264,11 +297,11 @@ ui <- dashboardPage(skin="red",
                         #                    )
                         #                  )
                         #           )
-                                )
+                         #       )
                         #)
                       #)
                     )
-)
+))
 
 # Define server logic required to draw the plots
 server <- shinyServer(function(input, output, session) {
@@ -375,32 +408,78 @@ server <- shinyServer(function(input, output, session) {
       fire <- fire %>% filter(park == input$park)
     }
   
-    sum <- input$summary
+    if(input$summaryType == "sumVar"){
+      sum <- input$summary %>% data.frame()
+      colnames(sum) <- "summaryName"
     
-    try <- c(1:length(sum)) %>% t() %>% data.frame()
-    #for(i in 1:length(sum)){
-      colnames(try) <- sum
-    #}
-    
-    if(input$variable == 1){
-      table <- fire %>% summarise(Minimum = min(n_trees_ha), Mean = mean(n_trees_ha), Median = median(n_trees_ha), Maximum = max(n_trees_ha), Variance = var(n_trees_ha)) 
-    } else if (input$variable == 2) {
-      table <- fire %>% summarise(Minimum = min(basal_area_ha), Mean = mean(basal_area_ha), Median = median(n_trees_ha), Maximum = max(basal_area_ha), Variance = var(basal_area_ha)) 
-    } else if (input$variable == 3) {
-      table <- fire %>% summarise(Minimum = min(stem_c_ha), Mean = mean(stem_c_ha), Median = median(n_trees_ha), Maximum = max(stem_c_ha), Variance = var(stem_c_ha)) 
-    }
+      if(input$variable == 1){
+        table <- fire %>% summarise(Minimum = min(n_trees_ha), Mean = mean(n_trees_ha), Median = median(n_trees_ha), Maximum = max(n_trees_ha), Variance = var(n_trees_ha)) 
+      } else if (input$variable == 2) {
+        table <- fire %>% summarise(Minimum = min(basal_area_ha), Mean = mean(basal_area_ha), Median = median(n_trees_ha), Maximum = max(basal_area_ha), Variance = var(basal_area_ha)) 
+      } else if (input$variable == 3) {
+        table <- fire %>% summarise(Minimum = min(stem_c_ha), Mean = mean(stem_c_ha), Median = median(n_trees_ha), Maximum = max(stem_c_ha), Variance = var(stem_c_ha)) 
+      }
   
-    if(!(try %in% "min")){
-      table <- table %>% select(-c(Minimum))
-    }
 
-    if(!(try %in% "max")){
-      table <- table %>% select(-c(Maximum))
+      for(i in 1:nrow(sum)){
+        if(sum$summaryName[i] == "Minimum"){
+          sum$summary[i] <- round(min(fire$n_trees_ha), 2)
+        } else if(sum$summaryName[i] == "Mean"){
+          sum$summary[i] <- round(mean(fire$n_trees_ha), 2)
+        } else if(sum$summaryName[i] == "Median"){
+          sum$summary[i] <- round(median(fire$n_trees_ha), 2)
+        } else if(sum$summaryName[i] == "Maximum"){
+          sum$summary[i] <- round(max(fire$n_trees_ha), 2)
+        } else if(sum$summaryName[i] == "Variance"){
+          sum$summary[i] <- round(var(fire$n_trees_ha), 2)
+        }
+      }
+    
+    
+      newSum <- sum %>% t() %>% data.frame() 
+    
+      colnames(newSum) <- sum$summaryName
+    
+      newSum[-c(1),]
+    } else {
+       table("Park"= fire$park, "Year" = fire$year)
     }
-  
-  table 
-  
   })
+  
+  output$tableRMSE <- renderTable({
+    
+    # Created dummy variables for the character variables, park and plot_id
+    dmy <- dummyVars("~ park + plot_id", data = fire)
+    
+    # Creates a dataframe with the dummy variables associated with our data
+    fireTrsf <- data.frame(predict(dmy, newdata = fire))
+    
+    # Binds the new data with our numeric variables with the original data and deletes the original character variables
+    fire2 <- cbind(fire, fireTrsf) %>% select(-c(park, plot_id))
+    
+    train <- sample(1:nrow(fire2), size = nrow(fire2)*input$prop)
+    test <- setdiff(1:nrow(fire2), train)
+    
+    fireTrain <- fire2[train, ]
+    fireTest <- fire2[test, ]
+    
+    MLR <- train(stem_c_ha ~ ., data = fireTrain,
+                 method = "lm",
+                 preProcess = c("center", "scale"),
+                 trControl = trainControl(method = "cv", number = 5))
+    
+    RT <- train(stem_c_ha ~ ., data = fireTrain,
+                method = "rpart",
+                preProcess = c("center", "scale"),
+                trControl = trainControl(method = "cv", number = 5))
+    
+    fitRF <- train(stem_c_ha ~ ., data = fireTrain,
+                   method = "rf",
+                   preProcess = c("center", "scale"),
+                   trControl = trainControl(method = "cv", number = 5),
+                   tuneGrid = expand.grid(mtry = c(1:round(ncol(fireTrain)/3))))
+  })
+  
   
   
 })
