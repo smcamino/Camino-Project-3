@@ -8,6 +8,7 @@ library(tidyverse)
 library(caret)
 library(DT)
 
+
 ui <- dashboardPage(skin="red",
                     
                     # Creates title
@@ -61,12 +62,13 @@ ui <- dashboardPage(skin="red",
                                              a(href = "https://smcamino.github.io/Project-3-Blog-Post.html", "Get the data description here!")
                                              )
                                   ),
-                                  # National Park Service Photo
-                                  img(src = "NationalParkService.jpg"),
+                                  
+                                 
                                   
                                   column(6,
                                          
-                                         #image_read("NationalParkService.jpg")
+                                     # National Park Service Photo
+                                  tags$img(src = "NationalParkService.png", width = "400px", height = "400px"),
                                    )
                                 )
                         ),
@@ -245,6 +247,25 @@ ui <- dashboardPage(skin="red",
                                                                              "Number of Trees" = "n_trees_ha",
                                                                              "Basal Area" = "basal_area_ha"))
                                              ),
+                                         
+                                         box(width=12,
+                                             background = "red",
+                                             numericInput(inputId = "kFold",
+                                                          label = "Choose k for k-fold Cross Validation",
+                                                          min = 1,
+                                                          max = 10,
+                                                          step = 1,
+                                                          value = 5)
+                                         ),
+                                         
+                                         box(width=12,
+                                             background = "red",
+                                             h5(strong("Would you like to center and scale your data?")),
+                                             checkboxInput(inputId = "centerScale",
+                                                           label = "Yes",
+                                                           value = TRUE)
+                                         ),
+                                         
                                          box(width=12,
                                              background = "red",
                                              
@@ -485,6 +506,14 @@ ui <- dashboardPage(skin="red",
 # Define server logic required to draw the plots
 server <- shinyServer(function(input, output, session) {
   
+  output$myImage <- renderImage({
+    list(src = "https://simg.nicepng.com/png/small/854-8543776_national-park-service-logo-us-national-parks-logo.png",
+         contentType = 'image/png',
+         width = 224,
+         height = 136,
+         alt = "This is image alternate text")
+  })
+  
   # Reads in data and data cleans slightly
   fire <- reactive({
     fire <- read_xlsx("tree_summary_dt.xlsx") %>% 
@@ -658,31 +687,55 @@ server <- shinyServer(function(input, output, session) {
   
   # Fits the Multiple Linear Regression Model. 5-fold Cross-Validation
   fitMLR <- eventReactive(input$do, {
-
-    fitMLR <- train(stem_c_ha ~ ., data = fireTrain(),
+    
+    if(input$centerScale == 1){
+      fitMLR <- train(stem_c_ha ~ ., data = fireTrain(),
                     method = "lm",
                     preProcess = c("center", "scale"),
-                    trControl = trainControl(method = "cv", number = 5))
+                    trControl = trainControl(method = "cv", number = input$kFold))
+    } else {
+      fitMLR <- train(stem_c_ha ~ ., data = fireTrain(),
+                      method = "lm",
+                      trControl = trainControl(method = "cv", number = input$kFold))
+    }
 
+    
   })
   
   # Fits the Regression Tree Model. 5-fold Cross-Validation
   fitRT <- eventReactive(input$do, {
     
-    fitRT <- train(stem_c_ha ~ ., data = fireTrain(),
+    if(input$centerScale == 1){
+      fitRT <- train(stem_c_ha ~ ., data = fireTrain(),
                    method = "rpart",
                    preProcess = c("center", "scale"),
-                   trControl = trainControl(method = "cv", number = 5))    
+                   trControl = trainControl(method = "cv", number = input$kFold))
+    } else {
+      fitRT <- train(stem_c_ha ~ ., data = fireTrain(),
+                     method = "rpart",
+                     trControl = trainControl(method = "cv", number = input$kFold))
+    }
+    
+        
   })
   
   # Fits the Random Forest Model. 5-fold Cross-Validation
   fitRF <- eventReactive(input$do, {
     
-    fitRF <- train(stem_c_ha ~ ., data = fireTrain(),
+    if(input$centerScale == 1){
+      fitRF <- train(stem_c_ha ~ ., data = fireTrain(),
                    method = "rf",
                    preProcess = c("center", "scale"),
-                   trControl = trainControl(method = "cv", number = 5),
-                   tuneGrid = expand.grid(mtry = c(1:round(ncol(fireTrain())/3))))    
+                   trControl = trainControl(method = "cv", number = input$kFold),
+                   tuneGrid = expand.grid(mtry = c(1:round(ncol(fireTrain())/3))))  
+    } else {
+      fitRF <- train(stem_c_ha ~ ., data = fireTrain(),
+                     method = "rf",
+                     trControl = trainControl(method = "cv", number = input$kFold),
+                     tuneGrid = expand.grid(mtry = c(1:round(ncol(fireTrain())/3))))  
+    }
+    
+      
   })
   
   # Creates the RMSE table for the 3 models
