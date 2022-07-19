@@ -6,6 +6,7 @@ library(lubridate)
 library(knitr)
 library(tidyverse)
 library(caret)
+library(DT)
 
 ui <- dashboardPage(skin="red",
                     
@@ -149,6 +150,10 @@ ui <- dashboardPage(skin="red",
                         
                         tabItem(tabName = "info",
                                 fluidRow(
+                                  
+                                  # Adds latex functionality
+                                  withMathJax(),
+                                  
                                   column(6,
                                          # Linear Regression
                                          h1("Multiple Linear Regression"),
@@ -244,35 +249,35 @@ ui <- dashboardPage(skin="red",
                                                background = "red",
                                                
                                                # Print out RMSE table
-                                               h4("RMSE for Each Model Using the Training Dataset"),
+                                               title = "RMSE for Each Model Using the Training Dataset",
                                                tableOutput("tableRMSE")
                                                ),
                                          box(width=12,
                                              background = "red",
                                              
                                                # Multiple Linear Regression Summary
-                                               h4("Multiple Linear Regression: Model Summary"),
+                                               title = "Multiple Linear Regression: Model Summary",
                                                verbatimTextOutput("sumMLR")
                                              ),
                                          box(width=12,
                                              background = "red",
                                              
                                                # Regression Tree variable importance plot
-                                               h4("Regression Tree: Importance Scores of Top 10 Variables"),
+                                               title = "Regression Tree: Importance Scores of Top 10 Variables",
                                                plotOutput("plotRT")
                                              ),
                                          box(width=12,
                                              background = "red",
                                              
                                                # Random forest variable importance plot
-                                               h4("Random Forest Model: Importance Scores of Top 10 Variables"),
+                                               title = "Random Forest Model: Importance Scores of Top 10 Variables",
                                                plotOutput("plotRF")
                                              ),
                                            box(width=12,
                                                background = "red",
-                                               h4(""),
-                                               textOutput("comparePrint"),
-                                               tableOutput("compare")
+                                               title = "Comparing the Three Models on the Test Data Set",
+                                               tableOutput("compare"),
+                                               textOutput("comparePrint")
                                                )
                                          )
                                   )
@@ -281,124 +286,192 @@ ui <- dashboardPage(skin="red",
                         
                         tabItem(tabName = "prediction",
                                 fluidRow(
-                                  column(width=3,
-                                         box(width=12,
-                                             background="red",
-                                             
-                                             # Choose model type for predictions
-                                             radioButtons(inputId = "model",
-                                                          label = "Choose Model Type:",
-                                                          choices = c("Multiple Linear Regression Model" = 1,
-                                                                      "Regression Tree Model" = 2,
-                                                                      "Random Forest Model" = 3),
-                                                          selected = 1)
-                                             ),
-                                         
+                                  column(width=6,
                                          box(width=12,
                                              background = "red",
                                              
-                                             # Choice of park for predictions
-                                             selectInput(inputId = "parkChoice", 
-                                                         label = "Choose a Park:",
-                                                         choices = c("None" = "NA",
-                                                                     "Crater Lake National Park" = "CRLA",
-                                                                     "Lassen Volcanic National Park" = "LAVO",
-                                                                     "Lava Beds National Monument" = "LABE",
-                                                                     "Whiskeytown National Recreation Area" = "WHIS"),
-                                                         selected = "NA"),
+                                             h4("Please Choose The Same Variables That Were Chosen in The Model Fitting Page:"),
                                              
-                                             # Choice of number of trees for predictions
-                                             numericInput(inputId = "treeChoice",
-                                                          label = "Choose number of trees from 10 to 860:",
-                                                          min = 10,
-                                                          max = 860,
-                                                          step = 1,
-                                                          value = 50),
+                                             # Checkbox for using park choice
+                                             checkboxInput(inputId = "parkCheck", 
+                                                           label = "Use Park for Predicting",
+                                                           value = TRUE),
                                              
-                                             # Choice of basal area for predictions
-                                             numericInput(inputId = "basalChoice",
-                                                          label = "Choose Basal Area from 0.6 to 106.6:",
-                                                          min = 0.6,
-                                                          max = 106.6,
-                                                          step = 0.01,
-                                                          value = 50),
+                                             conditionalPanel(condition = "input.parkCheck == 1",
+                                                              # Choice of park for predictions
+                                                              selectInput(inputId = "parkChoice",
+                                                                          label = "Choose a Park:",
+                                                                          choices = c("Crater Lake National Park" = "parkCRLA",
+                                                                                      "Lassen Volcanic National Park" = "parkLAVO",
+                                                                                      "Lava Beds National Monument" = "parkLABE",
+                                                                                      "Whiskeytown National Recreation Area" = "parkWHIS"),
+                                                                          selected = "parkCRLA")),
                                              
-                                             # Choose day for predictions
-                                             numericInput(inputId = "dayChoice",
-                                                          label = "Choose a day from 1 to 31:",
-                                                          min = 1,
-                                                          max = 31,
-                                                          step = 1,
-                                                          value = 20), 
+                                             # Checkbox for using tree choice
+                                             checkboxInput(inputId = "treeCheck", 
+                                                           label = "Use Number of Trees for Predicting",
+                                                           value = TRUE),
                                              
-                                             # choose month for predictions
-                                             selectInput(inputId = "monthChoice",
-                                                          label = "Choose a month:",
-                                                          choices = c("April" = 4,
-                                                                      "May" = 5,
-                                                                      "June" = 6,
-                                                                      "July" = 7,
-                                                                      "August" = 8,
-                                                                      "September" = 9,
-                                                                      "October" = 10,
-                                                                      "November" = 11,
-                                                                      "December" = 12)),
+                                             conditionalPanel(condition = "input.treeCheck == 1",
+                                                              # Choice of number of trees for predictions
+                                                              numericInput(inputId = "treeChoice",
+                                                                           label = "Choose number of trees from 10 to 860:",
+                                                                           min = 10,
+                                                                           max = 860,
+                                                                           step = 1,
+                                                                           value = 50)),
                                              
-                                             # Choose year for predictions
-                                             numericInput(inputId = "yearChoice",
-                                                          label = "Choose a year from 1989 to 2019:",
-                                                          min = 1989,
-                                                          max = 2019,
-                                                          step = 1,
-                                                          value = 1999)
+                                             # Checkbox for using basal area choice
+                                             checkboxInput(inputId = "basalCheck", 
+                                                           label = "Use Basal Area for Predicting",
+                                                           value = TRUE),
+                                             
+                                             conditionalPanel(condition = "input.basalCheck == 1",
+                                                              # Choice of basal area for predictions
+                                                              numericInput(inputId = "basalChoice",
+                                                                           label = "Choose Basal Area from 0.6 to 106.6:",
+                                                                           min = 0.6,
+                                                                           max = 106.6,
+                                                                           step = 0.01,
+                                                                           value = 50)),
+                                             
+                                             # Checkbox for using day choice
+                                             checkboxInput(inputId = "dayCheck", 
+                                                           label = "Use Day for Predicting",
+                                                           value = TRUE),
+                                             
+                                             conditionalPanel(condition = "input.dayCheck == 1",
+                                                              # Choose day for predictions
+                                                              numericInput(inputId = "dayChoice",
+                                                                           label = "Choose a day from 1 to 31:",
+                                                                           min = 1,
+                                                                           max = 31,
+                                                                           step = 1,
+                                                                           value = 20)), 
+                                             
+                                             # Checkbox for using month choice
+                                             checkboxInput(inputId = "monthCheck", 
+                                                           label = "Use Month for Predicting",
+                                                           value = TRUE),
+                                             
+                                             conditionalPanel(condition = "input.monthCheck == 1",
+                                                              # choose month for predictions
+                                                              selectInput(inputId = "monthChoice",
+                                                                          label = "Choose a month:",
+                                                                          choices = c("April" = 4,
+                                                                                      "May" = 5,
+                                                                                      "June" = 6,
+                                                                                      "July" = 7,
+                                                                                      "August" = 8,
+                                                                                      "September" = 9,
+                                                                                      "October" = 10,
+                                                                                      "November" = 11,
+                                                                                      "December" = 12))),
+                                             
+                                             # Checkbox for using tree choice
+                                             checkboxInput(inputId = "yearCheck", 
+                                                           label = "Use Year for Predicting",
+                                                           value = TRUE),
+                                             
+                                             conditionalPanel(condition = "input.yearCheck == 1",
+                                                              # Choose year for predictions
+                                                              numericInput(inputId = "yearChoice",
+                                                                           label = "Choose a year from 1989 to 2019:",
+                                                                           min = 1989,
+                                                                           max = 2019,
+                                                                           step = 1,
+                                                                           value = 1999))
                                          )
-                                         )
-                                  ),
-                                  column(width=9,
-                                         fluidRow(
-                                           box(width=6,
+                                         ),
+                                  
+                                
+                                column(width=6,
+                                       box(width=12,
+                                           background="red",
+                                           
+                                           h4("Choose One of The Models From The Model Fitting Page That You Want to Use For Prediction:"),
+                                           
+                                           # Choose model type for predictions
+                                           radioButtons(inputId = "model",
+                                                        label = "Choose Model Type:",
+                                                        choices = c("Multiple Linear Regression Model" = 1,
+                                                                    "Regression Tree Model" = 2,
+                                                                    "Random Forest Model" = 3),
+                                                        selected = 1)
                                            ),
-                                           box(width=6,
+                                       box(width=12,
+                                           background = "red",
+                                           # Button to press to run models
+                                           actionButton("do2", "Run Predictive Model"),
+                                           p("Note: Please press me once and be patient. It takes a little while for me to think!")
+                                               
+                                           ),
+                                       box(width=12,
+                                           background = "red",
+                                           h4(textOutput("predicting"))
                                            )
-                                         )
-                                  )
+                                         
+                                      )
                                 )
+                        ),
                         
-                        # 
-                        # tabItem(tabName = "data",
-                        #         fluidRow(
-                        #           column(width=3,
-                        #                  box(width=12,background="red",sliderInput("yvalue","Y=Number of Successes",min = 0,max = 30,value = 15)
-                        #                  ),
-                        #                  box(width=12,
-                        #                      title="Hyperparameters of the prior distribution for \\(\\Theta\\)",
-                        #                      background="red",
-                        #                      solidHeader=TRUE,
-                        #                      p("\\(\\frac{\\Gamma(\\alpha+\\beta)}{\\Gamma(\\alpha)\\Gamma(\\beta)}\\theta^{\\alpha-1}(1-\\theta)^{\\beta-1}\\)"),
-                        #                      h5("(Set to 1 if blank.)"),
-                        #                      numericInput("alpha",label=h5("\\(\\alpha\\) Value (> 0)"),value=1,min=0,step=0.1),
-                        #                      numericInput("beta",label=h5("\\(\\beta\\) Value (> 0)"),value=1,min=0,step=0.1)
-                        #                  )
-                        #           ),
-                        #           column(width=9,
-                        #                  fluidRow(
-                        #                    box(width=6,
-                        #                        plotOutput("priorPlot"),
-                        #                        br(),
-                        #                        h4("Prior distribution for the probability of success parameter \\(\\Theta\\).")
-                        #                    ),
-                        #                    box(width=6,
-                        #                        plotOutput("distPlot"),
-                        #                        br(),
-                        #                        h4("Posterior distribution for the probability of success \\(\\Theta\\).")
-                        #                    )
-                        #                  )
-                        #           )
-                         #       )
-                        #)
-                      #)
-                    )
-))
+
+                      tabItem(tabName = "data",
+                              fluidRow(
+                                column(width=12,
+                                       box(width=12,
+                                           background="red",
+                                           
+                                           checkboxGroupInput(inputId = "dataVarSelect",
+                                                              label = "Choose variables you want included in the data set:",
+                                                              choices = c("Park" = "park",
+                                                                          "Day" = "day",
+                                                                          "Month" = "month",
+                                                                          "Year" = "year",
+                                                                          "Number of Trees" = "n_trees_ha",
+                                                                          "Basal Area" = "basal_area_ha"),
+                                                              selected = c("Park" = "park",
+                                                                           "Day" = "day",
+                                                                           "Month" = "month",
+                                                                           "Year" = "year",
+                                                                           "Time Since the Burn" = "time_since_burn",
+                                                                           "Number of Trees" = "n_trees_ha",
+                                                                           "Basal Area" = "basal_area_ha"))
+                                       ),
+                               
+                                       box(width=12,
+                                           background = "red",
+                  
+                                           radioButtons(inputId = "dataPark",
+                                                        label = "Would You Like the Data Set to be Filtered by Park?",
+                                                        choices = c("Do Not Filter" = "No",
+                                                                    "Crater Lake National Park" = "CRLA",
+                                                                    "Lassen Volcanic National Park" = "LAVO",
+                                                                    "Lava Beds National Monument" = "LABE",
+                                                                    "Whiskeytown National Recreation Area" = "WHIS"),
+                                                        selected = "No")
+                                           ),
+                                       
+                                       box(width = 12,
+                                           background = "red",
+                                           title = "Download Data Here!",
+                                           downloadButton("downloadData", "Download"))
+                                       )
+                                ),
+                                           
+                                column(width=12,
+                                       box(width=12,
+                                           background = "red",
+                                           dataTableOutput("data"),style = "height:500px; overflow-y: scroll;overflow-x: scroll;"
+                                           )
+                                       )
+                               )
+                                     
+                              )
+                      )
+)
+
+
 
 # Define server logic required to draw the plots
 server <- shinyServer(function(input, output, session) {
@@ -662,20 +735,24 @@ server <- shinyServer(function(input, output, session) {
     # Creates the names of the different models 
     modelNames <- c("Multiple Linear Regression Model", "Regression Tree Model", "Random Forest Model")
     
-    # row binds the post comparisons and makes it a dataframe
+    # Row binds the post comparisons and makes it a dataframe
     comp <- rbind(postMLR, postRT, postRF) %>% data.frame()
     
-    # Changes the row names to the names of the different models created above
-    rownames(comp) <- modelNames
+    # Column bind modelNames and comp
+    compName <- cbind(modelNames, comp)
     
-    # Chooses the winner of the models by finding minimum RMSE
-    winner <- comp %>% filter(RMSE == min(RMSE))
+    # Change Column name for modelNames
+    colnames(compName)[1] <- "Model"
+    
+    # Print
+    compName
     
   })
   
   output$comparePrint <- renderText({
     # Prints out the minimum
-    print(paste0("The winning model is the ", rownames(winner())))
+    winner <- winner() %>% filter(RMSE == min(RMSE)) %>% select(Model)
+    print(paste0("The model with the smallest RMSE is ", winner))
   })
   
   output$compare <- renderTable({
@@ -683,6 +760,156 @@ server <- shinyServer(function(input, output, session) {
     winner()
 
   })
+  
+  newData2 <- eventReactive(input$do2, {
+    
+    if(input$parkCheck == 1){
+      
+      park <- 1
+      parkCRLA <- 0
+      parkLABE <- 0
+      parkLAVO <- 0
+      parkWHIS <- 0
+      
+      if(input$parkChoice == "parkCRLA"){
+        parkCRLA <- 1
+      } else if (input$parkChoice == "parkLABE"){
+        parkLABE <- 1
+      } else if (input$parkChoice == "parkLAVO"){
+        parkLAVO <- 1
+      } else if (input$parkChoice == "parkWHIS"){
+        parkWHIS <- 1
+      }
+      
+    } else {
+      park <- NA
+    }
+    
+    if(input$treeCheck == 1){
+      n_trees_ha <- input$treeChoice
+    } else {
+      n_trees_ha <- NA
+    }
+    
+    if(input$basalCheck == 1){
+      basal_area_ha <- input$basalChoice
+    } else {
+      basal_area_ha <- NA
+    }
+    
+    if(input$dayCheck == 1){
+      day <- input$dayChoice
+    } else {
+      day <- NA
+    }
+    
+    if(input$monthCheck == 1){
+      month <- as.numeric(input$monthChoice)
+    } else {
+      month <- NA
+    }
+    
+    if(input$yearCheck){
+      year <- input$yearChoice
+    } else {
+      year <- NA
+    }
+    
+    newData <- data.frame(park, year, n_trees_ha, basal_area_ha, month, day)
+    
+    newData2 <- newData %>% select(input$varSelect)
+    
+    if(input$parkCheck == 1){
+      newData2 <- data.frame(newData2, parkCRLA, parkLABE, parkLAVO, parkWHIS)
+      newData2 <- newData2 %>% select(-c(park))
+    }
+    
+    newData2
+  })
+  
+  predFit <- eventReactive(input$do2, {
+        if(input$model == 1){
+
+      fitMLR <- fitMLR()
+      predFit <- predict(fitMLR, newdata = newData2())
+
+    } else if(input$model == 2){
+
+      fitRT <- fitRT()
+      predFit <- predict(fitRT, newdata = newData2())
+
+    } else if(input$model == 3){
+
+      fitRF <- fitRF()
+      predFit <- predict(fitRF, newdata = newData2())
+
+    }
+  })
+  
+  output$predicting <- renderText({
+    
+    print(paste0("The prediction for Stem Carbon is ", round(predFit(), 2)))
+    
+  })
+  
+  fireData <- reactive({
+    
+    varList <- input$dataVarSelect
+    
+    fire <- fire()
+    
+    if(input$dataPark != "No"){
+      
+      new <- paste0("park", input$dataPark)
+      
+      fire2 <- fire %>% 
+               filter(park == input$dataPark) %>%
+               mutate(new = 1)
+      
+      colnames(fire2)[ncol(fire2)] <- new
+      
+      fire2 <- fire2 %>% select(stem_c_ha, varList, new) %>% select(-c(park))
+      
+    } else {
+      
+      if (varList[[1]] == "park"){
+        
+        fire <- fire %>% select(stem_c_ha, varList)
+        
+        # Created dummy variables for the character variables, park 
+        dmy <- dummyVars("~ park", data = fire)
+      
+        # Creates a dataframe with the dummy variables associated with our data
+        fireTrsf <- data.frame(predict(dmy, newdata = fire))
+      
+        # Binds the new data with our numeric variables with the original data and deletes the original character variables
+        fire2 <- cbind(fire, fireTrsf) %>% select(-c(park))
+      
+      } else {
+        
+        fire2 <- fire %>% select(stem_c_ha, varList)
+
+      }
+    }
+    
+    fire2
+  })
+  
+  output$data <- renderDataTable({
+    
+    datatable(fireData(), options = list(paging = FALSE))
+    
+  })
+  
+  output$downloadData <- downloadHandler(
+    filename = function(){
+      paste("firedata-", Sys.Date(), ".csv", sep = "")
+    },
+    
+    content = function(file){
+      write.csv(fireData(), file)
+    }
+  )
   
   
 })
