@@ -57,7 +57,8 @@ ui <- dashboardPage(skin="red",
                                          # Description of the data
                                          h1("What data is being used?"),
                                          # Box to contain description
-                                         box(background="red",width=12,
+                                         box(background="red",
+                                             width=12,
                                              p("The data was collected from the Klamath network parks which include Crater Lake National Park, Lassen Volcanic National Park, Lava Beds National Monument, and Whiskeytown National Recreation Area. The measurements were taken before, pre-burn, post-burn, and after the fire occurred in these areas. The data was proveded by a Regional Fire Ecologist for the National Park Service, Interior Regions 8, 9, 10, and 12 and exported by the U.S. Geological Survey."),
                                              a(href = "https://smcamino.github.io/Project-3-Blog-Post.html", "Get the data description here!")
                                              )
@@ -66,10 +67,14 @@ ui <- dashboardPage(skin="red",
                                  
                                   
                                   column(6,
-                                         
-                                     # National Park Service Photo
-                                  tags$img(src = "NationalParkService.png", width = "400px", height = "400px"),
-                                   )
+                                         box(background="red",
+                                             width=8,
+                                             
+                                             # National Park Service Photo
+                                             tags$img(src = "NationalParkService.png", width = "300px", height = "400px",)
+                                   
+                                             )
+                                  )
                                 )
                         ),
                         
