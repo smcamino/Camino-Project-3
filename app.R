@@ -176,10 +176,8 @@ ui <- dashboardPage(skin="red",
                                              br(),
                                              h4("DrawBacks"),
                                              p("The drawbacks of multiple linear regression are that it can often be overly simplistic, there are assumptions that aren’t always met, for example, the linear relationship between independent and dependent variables, that the predictor variables aren’t correlated, and constant variance, and it is severely affected by outliers and missing variables. Another drawback includes that multiple linear regression doesn’t determine feature importance. ")
-                                             )
-                                  ),
-
-                                  column(6,
+                                             ),
+                                 
                                          # Tree
                                          h1("Regression Tree"),
                                          #box to contain description
@@ -210,7 +208,9 @@ ui <- dashboardPage(skin="red",
                                              br(),
                                              h4("DrawBacks"),
                                              p("Drawbacks for Random Forest are that it is computationally slow, it can be biased when dealing with categorical variables, and it is not the optimal method for datasets that have a lot of sparse variables. ")
-                                             )
+                                             ),
+                                         
+                                         
                                   )
                                 )
                         ),
