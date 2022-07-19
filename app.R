@@ -57,7 +57,8 @@ ui <- dashboardPage(skin="red",
                                          h1("What data is being used?"),
                                          # Box to contain description
                                          box(background="red",width=12,
-                                             p("The data was collected from the Klamath network parks which include Crater Lake National Park, Lassen Volcanic National Park, Lava Beds National Monument, and Whiskeytown National Recreation Area. The measurements were taken before, pre-burn, post-burn, and after the fire occurred in these areas. The data was proveded by a Regional Fire Ecologist for the National Park Service, Interior Regions 8, 9, 10, and 12 and exported by the U.S. Geological Survey.")
+                                             p("The data was collected from the Klamath network parks which include Crater Lake National Park, Lassen Volcanic National Park, Lava Beds National Monument, and Whiskeytown National Recreation Area. The measurements were taken before, pre-burn, post-burn, and after the fire occurred in these areas. The data was proveded by a Regional Fire Ecologist for the National Park Service, Interior Regions 8, 9, 10, and 12 and exported by the U.S. Geological Survey."),
+                                             a(href = "https://smcamino.github.io/Project-3-Blog-Post.html", "Get the data description here!")
                                              )
                                   ),
                                   # National Park Service Photo
@@ -161,10 +162,13 @@ ui <- dashboardPage(skin="red",
                                          box(background="red",
                                              width=12,
                                              h4("What is it?"),
+                                             p("Multiple linear regression fits a linear equation to the data, attempting to model the relationship between two variables, the response, and explanatory variables. This equation is most commonly found by using the method of least-squares, which minimizes the sum of squared residuals. These models are usually written as $$Y_i=\\beta_0 + \\beta_1 x_{1i} + ... + \\beta_p x_{pi}$$"),
                                              br(),
                                              h4("Benefits"),
+                                             p("The benefits of multiple linear regression include how it’s computationally efficient, it produces a simple model, and the output is easy to interpret."),
                                              br(),
-                                             h4("DrawBacks")
+                                             h4("DrawBacks"),
+                                             p("The drawbacks of multiple linear regression are that it can often be overly simplistic, there are assumptions that aren’t always met, for example, the linear relationship between independent and dependent variables, that the predictor variables aren’t correlated, and constant variance, and it is severely affected by outliers and missing variables. Another drawback includes that multiple linear regression doesn’t determine feature importance. ")
                                              )
                                   ),
 
@@ -175,11 +179,13 @@ ui <- dashboardPage(skin="red",
                                          box(background="red",
                                              width=12,
                                              h4("What is it?"),
-                                             p("Random forest is a an ensemble learning method that is an extension of the idea of the bagging method. Like the bagging method, the random forest algorithm uses bagging, also known as bootstrap aggregation, to resample from the data or a fitted model randomly. Then multiple decision trees are created from these samples to create an uncorrelated forest and the results are then averaged. Unlike bagging, random forest doesn't use all of it's predictors but uses a random subset of predictors for each bootstrap sample. If there is a strong predictor, it'll likely be used for every first split in bagging, so randomly subsetting predictors will reduce correlation of tree predictions in random forest models."),
+                                             p("Regression Trees are used to predict a continuous response and are built through recursive binary splitting. This process iteratively splits the data into regions and continues splitting each region into smaller groups. Each region has a different prediction, usually calculated by using the mean of the observations. Each split is selected by minimizing the residual sum of squares from the mean in the two separate regions. Whis is, $$\\sum_{i:x_i \\in R_1 (j,s)} (y_i - \\bar{y}_{R_1})^2 + \\sum_{i:x_i \\in R_2 (j,s)} (y_i - \\bar{y}_{R_2})^2$$ where $$R_1(j,s) = \\{x|x_j < s\\}$$ and $$R_2(j,s) = \\{x|x_j \\geq s\\}$$"),
                                              br(),
                                              h4("Benefits"),
+                                             p("The benefits of using regression trees include that it is easy to interpret, understand, and visualize. Regression trees are non-parametric, therefore there are no assumptions that need to be met before using this method. This method also is not largely influenced by outliers or missing variables and can handle both numerical and categorical variables."),
                                              br(),
-                                             h4("DrawBacks")
+                                             h4("DrawBacks"),
+                                             p("A drawback for regression trees is that recursive binary splitting doesn’t look ahead. It only looks at the best split at that specific moment. This method is also prone to overfitting and instability because small changes in data can impact the tree structure greatly. It also takes longer to train the model using this method since the calculations involved can become more complex.")
                                             )
                                   ),
 
@@ -190,10 +196,13 @@ ui <- dashboardPage(skin="red",
                                          box(background="red",
                                              width=12,
                                              h4("What is it?"),
+                                             p("Random forest is an ensemble learning method that is an extension of the idea of the bagging method. Like the bagging method, the random forest algorithm uses bagging, also known as bootstrap aggregation, to resample from the data or a fitted model randomly. Then multiple decision trees are created from these samples to create an uncorrelated forest and the results are then averaged. Unlike bagging, random forest modeling doesn't use all its predictors but uses a random subset of predictors for each bootstrap sample. The number of randomly selected predictors used for the prediction method is calculated by finding one-third of the number of variables. $$m = p/3$$ If there is a strong predictor, it'll likely be used for every first split in bagging, so randomly subsetting predictors will reduce the correlation of tree predictions in random forest models."),
                                              br(),
                                              h4("Benefits"),
+                                             p("The benefits of Random Forest are that it is robust to outliers, the risk of overfitting is lower, it works well with data that is non-linear, it runs efficiently on large datasets, and is more accurate than other classification methods."),
                                              br(),
-                                             h4("DrawBacks")
+                                             h4("DrawBacks"),
+                                             p("Drawbacks for Random Forest are that it is computationally slow, it can be biased when dealing with categorical variables, and it is not the optimal method for datasets that have a lot of sparse variables. ")
                                              )
                                   )
                                 )
