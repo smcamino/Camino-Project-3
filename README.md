@@ -23,7 +23,7 @@ In this repo you will find code for this project in the app.R file. This code cr
 
 ## Code to install packages:
 
-`install.packages(c("shiny", "shinydashboard", "fontawesome", "readxl", "lubridate", "knitr", "tidyverse", "caret", "DT"))`
+`install.packages(c("shiny", "shinydashboard", "fontawesome", "readxl", "lubridate", "tidyverse", "caret", "DT"))`
 
 ## Code to create app:
   
