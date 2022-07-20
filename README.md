@@ -10,8 +10,7 @@ In this repo you will find code for this project in the app.R file. This code cr
 
 * [`shiny`](https://shiny.rstudio.com/): This package is used to build the interactive web app. 
 * [`shinydashboard`](https://rstudio.github.io/shinydashboard/): This package is used to create dashboards, specifically for the tabs and different pages. 
-* [`fontawesome`](https://cran.r-project.org/web/packages/fontawesome/index.html): This package is used to make the fun icons for the tabs
-* [`knitr`](https://cran.r-project.org/web/packages/knitr/index.html): This package is used to greate nicely printed tables.
+* [`fontawesome`](https://cran.r-project.org/web/packages/fontawesome/index.html): This package is used to make the fun icons for the tabs.
 * [`TidyVerse`](https://www.tidyverse.org/): This package was loaded to retrieve the packages below.
   * [`ggplot2`](https://ggplot2.tidyverse.org/): This package was used to create our plots for the exploratory data analysis.
   * [`dplyr`](https://dplyr.tidyverse.org/): This package was used to `select`, `filter`, and `summarise` our data.
