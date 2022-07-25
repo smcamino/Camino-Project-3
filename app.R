@@ -510,14 +510,6 @@ ui <- dashboardPage(skin="red",
 # Define server logic required to draw the plots
 server <- shinyServer(function(input, output, session) {
   
-  output$myImage <- renderImage({
-    list(src = "https://simg.nicepng.com/png/small/854-8543776_national-park-service-logo-us-national-parks-logo.png",
-         contentType = 'image/png',
-         width = 224,
-         height = 136,
-         alt = "This is image alternate text")
-  })
-  
   # Reads in data and data cleans slightly
   fire <- reactive({
     fire <- read_xlsx("tree_summary_dt.xlsx") %>% 
